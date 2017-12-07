@@ -3,8 +3,8 @@ from cStringIO import StringIO
 from urllib2 import urlopen
 from urlparse import urljoin
 
-from BeautifulSoup import BeautifulSoup,SoupStrainer
-from html5lib import parse,treebuilders
+from bs4 import BeautifulSoup,SoupStrainer
+from html5lib import parse ,treebuilders
 
 URLs=("http://python.org","http://google.com",)
 
@@ -13,11 +13,13 @@ def output(x):
 
 def simpleBS(url,f):
     "simpleBS() - use BeautifulSoup to parse all tags to get anchors"
-    output(urljoin(url, x["href"]) for x in BeautifulSoup(f,parseOnlyThese=SoupStrainer("a")))
+    output(urljoin(url, x['href']) for x in BeautifulSoup(f, "html.parser").findAll('a'))
 
 def fasterBS(url,f):
     "fasterBS - use BeautifulSoup to parse only anchor tags"
-    output(urljoin(url,x["helf"]) for x in BeautifulSoup(f,parseOnlyThese=SoupStrainer("a")))
+    #output(urljoin(url, x["href"]) for x in BeautifulSoup(f,parse_only=SoupStrainer("a")))
+    output(urljoin(url, x['href']) \
+           for x in BeautifulSoup(f, "html.parser", parse_only=SoupStrainer('a', href=True)))
 
 def htmlparser(url,f):
     "htmlparser() - use HTMLParser to parse anchor tags"
@@ -32,11 +34,11 @@ def htmlparser(url,f):
                     self.data.append(attr[1])
     parser=AnchorParser()
     parser.feed(f.read())
-    output(urljoin(url,x) for x in parser.data)
+    output(urljoin(url , x) for x in parser.data)
 
-def html5libparser(url,f):
+def html5libparse(url,f):
     "html5libparser() - use html5lib to parse achor tags"
-    output(urljoin(url,x.attributes["herf"]) for x in parse(f)\
+    output(urljoin(url,x.attributes["href"]) for x in parse(f)\
            if isinstance(x,treebuilders.simpletree.Element) and x.name=="a")
 
 def process(url,data):
@@ -50,7 +52,7 @@ def process(url,data):
     htmlparser(url,data)
     data.seek(0)
     print "\n*** HTML5lib"
-    html5libparser(url,data)
+    html5libparse(url,data)
 
 def main():
     for url in URLs:
@@ -61,14 +63,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-
-
-
-
-
-
-
-
-
-
